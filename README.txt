@@ -1,0 +1,1 @@
+Here are IniSP labs for the second semestr. Variant 8
