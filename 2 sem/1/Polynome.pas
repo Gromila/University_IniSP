@@ -1,0 +1,164 @@
+unit Polynome;
+
+interface
+
+uses List, Monome;
+
+type
+
+TPolynome = class
+  private
+    fMonomeList: TList;
+  public
+    constructor Create;
+    procedure AddMonome (coefficient: extended; XPower: integer);
+    function ToString: string;
+    function Calculate (value: extended): extended;
+    class function Addition(a,b: TPolynome): TPolynome;
+    class function Invert(a: TPolynome): TPolynome;
+    class function Subtract(a,b: TPolynome): TPolynome;
+    function GetPower: integer;
+    function GetCoefficient (XPower: integer): extended;
+    class function Multiply(a,b: TPolynome): TPolynome;
+end;
+
+implementation
+
+constructor TPolynome.Create;
+begin
+  fMonomeList := TList.Create;
+end;
+
+procedure TPolynome.AddMonome(coefficient: extended; XPower: integer);
+var
+  monome: TMonome;
+begin
+  monome := TMonome.Create(coefficient, XPower);
+  fMonomeList.AddItem(monome);
+end;
+
+function TPolynome.ToString: string;
+var
+  monome: TMonome;
+begin
+  Result:='';
+  monome := fMonomeList.Step;
+  while (monome <> nil) do
+    begin
+      if (monome.ToString = '') then continue;
+      Result := Result + monome.ToString;
+      monome := fMonomeList.Step;
+    end;
+  if (Result = '') then Result := '0';
+  if (Result[1] = '+') then Result:=''+Copy(Result,2,Length(Result)-1);
+end;
+
+function TPolynome.Calculate(value:extended):extended;
+var
+  monome: TMonome;
+begin
+  Result := 0.0;
+  monome := fMonomeList.Step;
+  while (monome <> nil) do
+    begin
+      Result := Result + monome.Calculate(value);
+      monome := fMonomeList.Step;
+    end;
+end;
+
+class function TPolynome.Addition(a,b: TPolynome): TPolynome;
+var
+  monome1, monome2: TMonome;
+begin
+  Result := TPolynome.Create;
+  monome1 := a.fMonomeList.Step;
+  while (monome1 <> nil) do
+    begin
+      Result.AddMonome(b.GetCoefficient(monome1.XPower) + monome1.Coefficient, monome1.XPower);
+      monome1 := a.fMonomeList.Step;
+    end;
+  monome2 := b.fMonomeList.Step;
+  while (monome2 <> nil) do
+    begin
+      Result.AddMonome(a.GetCoefficient(monome2.XPower) + monome2.Coefficient, monome2.XPower);
+      monome2 := b.fMonomeList.Step;
+    end;
+end;
+
+class function TPolynome.Invert(a:TPolynome): TPolynome;
+var
+  monome: TMonome;
+begin
+  Result := TPolynome.Create;
+  monome := a.fMonomeList.Step;
+  while (monome <> nil) do
+    begin
+      Result.AddMonome(-monome.Coefficient, monome.XPower);
+      monome := a.fMonomeList.Step;
+    end;
+end;
+
+class function TPolynome.Subtract (a,b: TPolynome): TPolynome;
+begin
+  Result := TPolynome.Addition(a, TPolynome.Invert(b));
+end;
+
+function TPolynome.GetPower: integer;
+var
+  monome: TMonome;
+  temp, max: integer;
+begin
+  if (fMonomeList.Step = nil) then
+    Result := -1
+  else
+    begin
+      monome := fMonomeList.Step;
+      max := monome.XPower;
+      while (monome <> nil) do
+        begin
+          monome := fMonomeList.Step;
+          if (monome <> nil) then
+            begin
+              temp := monome.XPower;
+              if (temp > max) then max:=temp;
+            end;
+        end;
+      Result := max;
+    end;
+end;
+
+function TPolynome.GetCoefficient(XPower: integer): extended;
+var
+  monome: TMonome;
+begin
+  monome := fMonomeList.Find(XPower);
+  if (monome <> nil) then
+    Result := monome.Coefficient
+  else
+    Result := 0.0;
+end;
+
+class function TPolynome.Multiply(a,b: TPolynome): TPolynome;
+var
+  i,j,power1,power2: integer;
+  k: extended;
+begin
+  Result := TPolynome.Create;
+  power1 := a.GetPower;
+  power2 := b.GetPower;
+  if ((power1 = -1) or (power2 = -1)) then
+    begin
+      Result := nil;
+      exit;
+    end;
+  for j:=0 to power1+power2-1 do
+  begin
+    k := 0.0;
+    for i:=0 to j do
+      k := k + a.GetCoefficient(i)*b.GetCoefficient(j-i);
+    Result.AddMonome(k,j);
+  end;
+  Result.AddMonome(a.GetCoefficient(power1) * b.GetCoefficient(power2), power1+power2);
+end;
+
+end.

@@ -1,0 +1,40 @@
+unit ListItem;
+
+interface
+
+uses Monome;
+
+type
+  TListItem = class
+  private
+    fData: TMonome;
+    fNext: TListItem;
+  public
+    property Data: TMonome read fData write fData;
+    property Next: TListItem read fNext write fNext;
+
+    constructor Create;overload;
+    constructor Create (data: TMonome);overload;
+    destructor Destroy;override;
+  end;
+
+implementation
+
+constructor TListItem.Create;
+begin
+  Data:=TMonome.Create;
+  Next:= nil;
+end;
+
+constructor TListItem.Create (Data: TMonome);
+begin
+  self.Data:=Data;
+  self.Next:= nil;
+end;
+
+destructor TListItem.Destroy;
+begin
+
+end;
+
+end.
